@@ -6,7 +6,9 @@ companion to recent emacsen and does the following:
 
 - Fetching ELPA package information from common sources (MELPA-stable,
   MELPA, GNU, Marmalade, Org)
--
+- Support for both file and tar packages
+- Resolving dependencies, accounting for repository preferences
+- Creation of an init file for your emacs environment
 
 emenv does not rely on emacs-lisp at all, it is a standalone program
 with a simple emacs-lisp reader, sufficient to parse the syntax of
@@ -29,6 +31,16 @@ Configuration
 (package projectile)
 (package auto-complete (from melpa-stable))
 
+```
+
+Wiring in your `init.el`
+------------------------
+
+If your Emenv file is in `~/.emacs.d` and you
+ran **emenv** there, put the following in your `init.el` file:
+
+```clojure
+(load-file "~/.emacs.d/.emenv/load.el)
 ```
 
 Running
