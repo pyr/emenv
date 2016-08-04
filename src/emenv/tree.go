@@ -11,7 +11,6 @@ func (stack *Stack) Parse() (Node, error) {
 
 	switch {
 	case head.Type == QuoteToken:
-		fmt.Printf("skipping quote")
 		return stack.Parse()
 	case head.Type == NumberToken:
 		return Node{Type: NumberNode, Number: head.Number}, nil
