@@ -16,6 +16,7 @@ const (
 	SymbolToken
 	KeywordToken
 	DotToken
+	QuoteToken
 	NilToken
 	EOFToken
 )

@@ -103,6 +103,8 @@ func (tk *Tokenizer) NextToken() (Token, error) {
 		return Token{Type: OpenParToken}, nil
 	case r == ')':
 		return Token{Type: CloseParToken}, nil
+	case r == '\'':
+		return Token{Type: QuoteToken}, nil
 	case r == '.':
 		return Token{Type: DotToken}, nil
 	case r == '"':

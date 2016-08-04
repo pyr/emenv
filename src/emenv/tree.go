@@ -10,6 +10,9 @@ func (stack *Stack) Parse() (Node, error) {
 	stack.Tokens = stack.Tokens[1:]
 
 	switch {
+	case head.Type == QuoteToken:
+		fmt.Printf("skipping quote")
+		return stack.Parse()
 	case head.Type == NumberToken:
 		return Node{Type: NumberNode, Number: head.Number}, nil
 	case head.Type == NilToken:

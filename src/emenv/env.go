@@ -33,12 +33,11 @@ func (env *Env) FetchInstallSet() error {
 				env.PackageDir,
 				idef.Name,
 				idef.Version))
-		} else {
-			buffer.WriteString(fmt.Sprintf("(add-to-list 'load-path \"%s%s-%s\")\n",
-				env.PackageDir,
-				idef.Name,
-				idef.Version))
 		}
+		buffer.WriteString(fmt.Sprintf("(add-to-list 'load-path \"%s%s-%s\")\n",
+			env.PackageDir,
+			idef.Name,
+			idef.Version))
 	}
 	ioutil.WriteFile(fmt.Sprintf("%s/load.el", env.BaseDir), buffer.Bytes(), 0644)
 	return nil
