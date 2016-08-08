@@ -150,3 +150,31 @@ func DumpDefs(defs map[string]InstallDef) {
 		}
 	}
 }
+
+func DumpDiffSet(ds DiffSet) {
+
+	fmt.Printf("Keeping %d, Upgrading %d, Deleting %d, Installing %d\n",
+		len(ds.Keep),
+		len(ds.Upgrade),
+		len(ds.Delete),
+		len(ds.Install))
+
+	fmt.Println("Keeping:")
+	for _, p := range(ds.Keep) {
+		fmt.Printf("  %s %s from %s\n", p.Name, p.Version, p.Repo)
+	}
+	fmt.Println("Removing:")
+	for _, p := range(ds.Delete) {
+		fmt.Printf("  %s %s from %s\n", p.Name, p.Version, p.Repo)
+	}
+	fmt.Println("Upgrading:")
+	for _, u := range(ds.Upgrade) {
+		fmt.Printf("  %s %s/%s => %s/%s\n",
+			u.Prev.Name, u.Prev.Repo, u.Prev.Version,
+			u.Next.Repo, u.Next.Version)
+	}
+	fmt.Println("Installing:")
+	for _, p := range(ds.Install) {
+		fmt.Printf("  %s %s from %s\n", p.Name, p.Version, p.Repo)
+	}
+}

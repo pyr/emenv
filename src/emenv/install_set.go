@@ -1,9 +1,5 @@
 package emenv
 
-import (
-	"fmt"
-)
-
 func (env *Env) FindPackageIn(rname string, pname string) (Package, error) {
 
 	repo, ok := env.Repositories[rname]
@@ -25,7 +21,6 @@ func (env *Env) TentativelyShadow(parent *InstallNode, pname string, depth int) 
 		return false
 	}
 	if previous.Depth > depth {
-		fmt.Printf("shadowing %s dependency of %s\n", pname, previous.Parent.Def.Name)
 		for i, c := range previous.Parent.Children {
 			if pname == c.Def.Name {
 				previous.Parent.Children[i] = previous.Parent.Children[len(previous.Parent.Children)-1]
@@ -112,7 +107,7 @@ func (env *Env) AddToInstallSet(parent *InstallNode, pdef PackageDef, depth int)
 		return nil
 	}
 
-	for r, _ := range env.Sources {
+	for _, r := range env.Prefer {
 		pkg, err := env.FindPackageIn(r, pdef.Name)
 		if err == nil {
 			if err = env.AddPkgToInstallSet(parent, r, pdef.Type, pkg, depth); err != nil {
@@ -121,6 +116,7 @@ func (env *Env) AddToInstallSet(parent *InstallNode, pdef PackageDef, depth int)
 			return nil
 		}
 	}
+
 	return NoSuchPackageError(pdef.Name)
 }
 

@@ -4,6 +4,10 @@ import (
 	"strings"
 )
 
+type Options struct {
+	ImplicitYes bool
+}
+
 type TokenType int
 
 const (
@@ -136,14 +140,29 @@ type InstallSet struct {
 	Packages map[string]InstallDef
 }
 
+type Upgrade struct {
+	Prev InstallDef
+	Next InstallDef
+}
+
+type DiffSet struct {
+	Keep []InstallDef
+	Delete []InstallDef
+	Install []InstallDef
+	Upgrade []Upgrade
+}
+
 type Env struct {
 	BaseDir      string
 	ArchiveDir   string
 	PackageDir   string
+	Packages     []PackageDef
 	Sources      map[string]Source
 	Prefer       []string
-	Packages     []PackageDef
+	Previous     map[string]InstallDef
 	Provided     []string
 	Repositories map[string]Repository
 	InstallSet   InstallSet
+	DiffSet      DiffSet
+	Options      Options
 }

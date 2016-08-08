@@ -3,7 +3,6 @@ package emenv
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 )
 
 func (env *Env) AddPackageToConfig(list []Node, ptype PackageType) error {
@@ -94,82 +93,76 @@ func (env *Env) AddToConfig(list []Node) error {
 	return UnreachableError
 }
 
-func LoadEnv(path string) (*Env, error) {
+func FindInSet(pkgs map[string]InstallDef, id InstallDef) (*InstallDef, bool) {
+
+	p, ok := pkgs[id.Name]
+	if !ok {
+		return nil, false
+	}
+	return &p, (p.Version == id.Version && p.Repo == id.Repo)
+}
+
+func (env *Env) LoadPreviousInstallSet() error {
+
+	path := fmt.Sprintf("%s/plist.el", env.BaseDir)
 
 	body, err := ioutil.ReadFile(path)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	tokens, err := ParseTokens(body)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	sources := make(map[string]Source)
-
-	sources["melpa-stable"] = Source{Name: "melpa-stable", URL: "https://stable.melpa.org/packages"}
-	sources["melpa"] = Source{Name: "melpa", URL: "https://melpa.org/packages"}
-	sources["gnu"] = Source{Name: "gnu", URL: "https://elpa.gnu.org/packages"}
-	sources["org"] = Source{Name: "org", URL: "http://orgmode.org/elpa"}
-	sources["sunrise"] = Source{Name: "sunrise", URL: "http://joseito.republika.pl/sunrise-commander"}
-
-	prefer := make([]string, 5)
-	prefer[0] = "melpa-stable"
-	prefer[1] = "org"
-	prefer[2] = "gnu"
-	prefer[3] = "melpa"
-	prefer[4] = "sunrise"
-
-	provided := make([]string, 4)
-	provided[0] = "emacs"
-	provided[1] = "cl-lib"
-	provided[2] = "eieio"
-	provided[3] = "json"
-
-	packages := make([]PackageDef, 0)
-
-	env := Env{
-		Sources:    sources,
-		Prefer:     prefer,
-		Provided:   provided,
-		Packages:   packages,
-		InstallSet: NewInstallSet(),
-	}
-
-	for {
-		tree, err := ParseForm(&tokens)
-		if err != nil {
-			return nil, err
-		}
-
-		if tree.Type == EOFNode {
-			break
-		}
-
-		if tree.Type != ListNode {
-			return nil, BadSyntaxError
-		}
-		err = env.AddToConfig(tree.Children)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	bdir := os.ExpandEnv("${PWD}/.emenv")
-	adir := fmt.Sprintf("%s/archives/", bdir)
-	pdir := fmt.Sprintf("%s/packages/", bdir)
-	err = os.MkdirAll(adir, 0755)
+	tree, err := ParseTree(tokens)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	err = os.MkdirAll(pdir, 0755)
-	if err != nil {
-		return nil, err
+
+	if tree.Type != ListNode {
+		return BadSyntaxError
 	}
-	env.ArchiveDir = adir
-	env.BaseDir = bdir
-	env.PackageDir = pdir
-	env.Repositories = make(map[string]Repository)
-	return &env, nil
+	for _, node := range tree.Children {
+		if node.Type != ListNode || len(node.Children) != 3 {
+			return BadSyntaxError
+		}
+		if (node.Children[0].Type != SymbolNode ||
+			node.Children[1].Type != StringNode ||
+			node.Children[2].Type != SymbolNode) {
+			return BadSyntaxError
+		}
+		env.Previous[node.Children[0].String] = InstallDef{
+			Name: node.Children[0].String,
+			Version: node.Children[1].String,
+			Repo: node.Children[2].String,
+		}
+	}
+
+	// Now that we have a previous installed set, compute differences
+
+	for _, prev := range env.Previous {
+		id, equal := FindInSet(env.InstallSet.Packages, prev)
+		switch {
+		case equal:
+			env.DiffSet.Keep = append(env.DiffSet.Keep, prev)
+		case id != nil:
+			env.DiffSet.Upgrade = append(env.DiffSet.Upgrade, Upgrade{Prev: prev, Next: *id})
+		default:
+			env.DiffSet.Delete = append(env.DiffSet.Delete, prev)
+		}
+	}
+
+	for _, p := range env.InstallSet.Packages {
+		if (p.Type != StandardPackage && p.Type != ThemePackage && p.Type != DependencyPackage) {
+			continue
+		}
+		id, _ := FindInSet(env.Previous, p)
+		if id == nil {
+			env.DiffSet.Install = append(env.DiffSet.Install, p)
+		}
+	}
+	DumpDiffSet(env.DiffSet)
+	return nil
 }

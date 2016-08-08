@@ -10,9 +10,10 @@ import (
 func main() {
 
 	cfg := flag.String("c", os.ExpandEnv("${PWD}/Emenv"), "configuration path")
+	yes := flag.Bool("y", false, "implicitly answer yes")
 	flag.Parse()
 
-	env, err := emenv.LoadEnv(*cfg)
+	env, err := emenv.LoadEnv(*cfg, emenv.Options{ImplicitYes: *yes})
 	if err != nil {
 		panic(err)
 	}
