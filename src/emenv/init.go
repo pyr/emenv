@@ -20,7 +20,7 @@ func LoadEnv(path string, opts Options) (*Env, error) {
 
 	sources := make(map[string]Source)
 
-	sources["melpa-stable"] = Source{Name: "melpa-stable", URL: "https://stable.melpa.org/packages"}
+	sources["melpa-stable"] = Source{Name: "melpa-stable", URL: "http://stable.melpa.org/packages"}
 	sources["melpa"] = Source{Name: "melpa", URL: "https://melpa.org/packages"}
 	sources["gnu"] = Source{Name: "gnu", URL: "https://elpa.gnu.org/packages"}
 	sources["org"] = Source{Name: "org", URL: "http://orgmode.org/elpa"}
